@@ -1,0 +1,74 @@
+
+#***********************************************Script de suppression ciblée des objets créés par le script Sports***********************************************
+Import-Module ActiveDirectory
+
+# Demande de confirmation
+Write-Warning "Ce script va supprimer tous les objets créés par le script Sports dans l'AD."
+$confirmation = Read-Host "Voulez-vous vraiment continuer? (Oui/Non)"
+
+if ($confirmation -ne "Oui") {
+    Write-Host "Opération annulée par l'utilisateur."
+    exit
+}
+
+# Fonction pour supprimer un objet AD en désactivant d'abord la protection
+function Remove-ADObjectForce {
+    param (
+        [string]$DistinguishedName
+    )
+    
+    try {
+        # Désactiver la protection contre la suppression accidentelle
+        Set-ADObject -Identity $DistinguishedName -ProtectedFromAccidentalDeletion $false -Confirm:$false
+        
+        # Supprimer l'objet
+        Remove-ADObject -Identity $DistinguishedName -Recursive -Confirm:$false
+        Write-Host "Objet supprimé: $DistinguishedName" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Erreur lors de la suppression de $DistinguishedName : $_" -ForegroundColor Red
+    }
+}
+
+# 1. Supprimer les utilisateurs créés par le script
+$userPatterns = @("Max.Verstappen", "Lewis.Hamilton", "Charles.Leclerc",
+                 "Kylian.Mbappe", "Cristiano.Ronaldo", "Lionel.Messi",
+                 "Leon.Marchand", "Florent.Manaudou", "Michael.Phelps",
+                 "Lebron.James", "Stephen.Curry", "Allen.Iverson",
+                 "Serena.William", "Raphael.Nadal", "Novak.Djokovic",
+                 "Antoine.Dupont", "Sebastien.Chabal", "Jonah.Lomu")
+
+foreach ($pattern in $userPatterns) {
+    $user = Get-ADUser -Filter { SamAccountName -eq $pattern } -ErrorAction SilentlyContinue
+    if ($user) {
+        Remove-ADObjectForce -DistinguishedName $user.DistinguishedName
+    }
+}
+
+# 2. Supprimer les groupes de sécurité créés par le script
+$groupPatterns = @("Formule1", "Football", "Natation", "Basketball", "Tennis", "Rugby",
+                  "Formule1-95", "Football-95", "Natation-95", "Basketball-95", "Tennis-95", "Rugby-95",
+                  "Formule1-93", "Football-93", "Natation-93", "Basketball-93", "Tennis-93", "Rugby-93",
+                  "Formule1-91", "Football-91", "Natation-91", "Basketball-91", "Tennis-91", "Rugby-91")
+
+foreach ($pattern in $groupPatterns) {
+    $group = Get-ADGroup -Filter { Name -eq $pattern } -ErrorAction SilentlyContinue
+    if ($group) {
+        Remove-ADObjectForce -DistinguishedName $group.DistinguishedName
+    }
+}
+
+# 3. Supprimer les UO créées par le script (dans l'ordre inverse de création)
+$ouPaths = @("OU=Essone,OU=Sports,DC=elowan,DC=fr",
+            "OU=Seine-Saint-Denis,OU=Sports,DC=elowan,DC=fr",
+            "OU=Val D'Oise,OU=Sports,DC=elowan,DC=fr",
+            "OU=Sports,DC=elowan,DC=fr")
+
+foreach ($ouPath in $ouPaths) {
+    $ou = Get-ADOrganizationalUnit -Filter * | Where-Object { $_.DistinguishedName -eq $ouPath } -ErrorAction SilentlyContinue
+    if ($ou) {
+        Remove-ADObjectForce -DistinguishedName $ou.DistinguishedName
+    }
+}
+
+Write-Host "Opération de suppression terminée." -ForegroundColor Cyan
