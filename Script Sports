@@ -286,3 +286,299 @@ Add-ADGroupMember -Identity 'Natation'-Members Natation-95,Natation-93,Natation-
 Add-ADGroupMember -Identity 'Basketball' -Members Basketball-95,Basketball-93,Basketball-91
 Add-ADGroupMember -Identity 'Tennis'-Members Tennis-95,Tennis-93,Tennis-91
 Add-ADGroupMember -Identity 'Rugby' -Members Rugby-95,Rugby-93,Rugby-91
+
+
+
+
+
+
+
+
+
+
+
+
+#***********************************************Importation des modules***********************************************
+
+Import-Module ActiveDirectory
+Import-Module 'Microsoft.PowerShell.Security'
+
+
+#***********************************************Création des utilisateurs dans un fichier csv***********************************************#
+
+ $users = @(
+ 
+    [PSCustomObject]@{ firstName = "Max"; lastName = "Verstappen"; office = "Val D'Oise"; password = "Pass123"; department = "Formule 1" },
+     [PSCustomObject]@{ firstName = "Lewis"; lastName = "Hamilton"; office = "Seine-Saint-Denis"; password = "Pass123"; department = "Formule 1" }          ###Formule 1###
+      [PSCustomObject]@{ firstName = "Charles"; lastName = "Leclerc"; office = "Essone"; password = "Pass123"; department = "Formule 1" }
+
+    [PSCustomObject]@{ firstName = "Kylian"; lastName = "Mbappe"; office = "Val D'Oise"; password = "Pass123"; department = "Football" },
+     [PSCustomObject]@{ firstName = "Cristiano"; lastName = "Ronaldo"; office = "Seine-Saint-Denis"; password = "Pass123"; department = "Football" }        ###Football###
+      [PSCustomObject]@{ firstName = "Lionel"; lastName = "Messi"; office = "Essone"; password = "Pass123"; department = "Football" }
+
+    [PSCustomObject]@{ firstName = "Leon"; lastName = "Marchand"; office = "Val D'Oise"; password = "Pass123"; department = "Natation" },
+     [PSCustomObject]@{ firstName = "Florent"; lastName = "Manaudou"; office = "Seine-Saint-Denis"; password = "Pass123"; department = "Natation" }         ###Natation###
+      [PSCustomObject]@{ firstName = "Michael"; lastName = "Phelps"; office = "Essone"; password = "Pass123"; department = "Natation" }
+
+    [PSCustomObject]@{ firstName = "Lebron"; lastName = "James"; office = "Val D'Oise"; password = "Pass123"; department = "Basketball" },
+     [PSCustomObject]@{ firstName = "Stephen"; lastName = "Curry"; office = "Seine-Saint-Denis"; password = "Pass123"; department = "Basketball" }          ###Basketball###
+      [PSCustomObject]@{ firstName = "Allen"; lastName = "Iverson"; office = "Essone"; password = "Pass123"; department = "Basketball" }
+
+    [PSCustomObject]@{ firstName = "Serena"; lastName = "William"; office = "Val D'Oise"; password = "Pass123"; department = "Tennis" },
+     [PSCustomObject]@{ firstName = "Raphael"; lastName = "Nadal"; office = "Seine-Saint-Denis"; password = "Pass123"; department = "Tennis" }              ###Tennis###
+      [PSCustomObject]@{ firstName = "Novak"; lastName = "Djokovic"; office = "Essone"; password = "Pass123"; department = "Tennis" }
+
+    [PSCustomObject]@{ firstName = "Antoine"; lastName = "Dupont"; office = "Val D'Oise"; password = "Pass123"; department = "Rugby" },
+     [PSCustomObject]@{ firstName = "Sebastien"; lastName = "Chabal"; office = "Seine-Saint-Denis"; password = "Pass123"; department = "Rugby" }            ###Rugby###
+      [PSCustomObject]@{ firstName = "Jonah"; lastName = "Lomu"; office = "Essone"; password = "Pass123"; department = "Rugby" }
+)
+
+
+#***********************************************Chemin du fichier CSV***********************************************#
+$csvPath = "C:\docs\Script\importSports.csv"
+
+#***********************************************Exportation des données en CSV***********************************************#
+
+$users | Export-Csv -Path $csvPath -Delimiter ";" -NoTypeInformation
+
+Write-Output "Fichier CSV créé : $csvPath"
+
+
+
+
+
+#***********************************************Chemin du fichier CSV***********************************************#
+
+$users = Import-Csv -Delimiter ";" -Path "C:\docs\Script\importSports.csv"
+
+$csvPath = "C:\docs\Script\importSports.csv"
+
+if (-not (Test-Path $csvPath)) {
+    Write-Error "Le fichier CSV n'existe pas : $csvPath"
+    exit
+}
+
+#***********************************************Création des OU***********************************************#
+                                                                                       
+New-ADOrganizationalUnit -Name "Sports" -Path "ou=0_m2l.lan,dc=elowan,dc=fr"                           
+                                                                                        
+New-ADOrganizationalUnit -Name "Val D'Oise" -Path "ou=Sports,ou=0_m2l.lan,dc=elowan,dc=fr"             
+New-ADOrganizationalUnit -Name "Seine-Saint-Denis" -Path "ou=Sports,ou=0_m2l.lan,dc=elowan,dc=fr"      
+New-ADOrganizationalUnit -Name "Essone" -Path "ou=Sports,ou=0_m2l.lan,dc=elowan,dc=fr"                 
+                                                                                        
+
+
+#***********************************************Ajout de chaque utilisateur dans son OU spécifique***********************************************#
+foreach ($user in $users) {
+    $name = "$($user.firstName) $($user.lastName)"
+    $login = "$($user.firstName).$($user.lastName)"
+    $Uoffice = $user.office
+    $Upassword = $user.password
+    $dept = $user.department
+
+    # Déterminer l'OU en fonction du bureau
+    switch ($Uoffice) {
+        "Val D'Oise" { $office = "OU=Val D'Oise,OU=Sports,OU=0_m2l.lan,DC=elowan,DC=fr" }
+        "Seine-Saint-Denis" { $office = "OU=Seine-Saint-Denis,OU=Sports,OU=0_m2l.lan,DC=elowan,DC=fr" }
+        "Essone" { $office = "OU=Essone,OU=Sports,OU=0_m2l.lan,DC=elowan,DC=fr" }
+        default { 
+            Write-Output "Bureau non reconnu pour l'utilisateur $name"
+            continue
+        }
+    }
+
+    # Vérifier si l'utilisateur existe déjà dans AD
+    if (Get-ADUser -Filter { SamAccountName -eq $login } -ErrorAction SilentlyContinue) {
+        Write-Output "L'utilisateur $login existe déjà."
+    } else {
+        try {
+            # Création de l'utilisateur
+            New-ADUser -Name $name `
+                       -SamAccountName $login `
+                       -UserPrincipalName "$login@elowan.fr" `
+                       -DisplayName $name `
+                       -GivenName $user.firstName `
+                       -Surname $user.lastName `
+                       -AccountPassword (ConvertTo-SecureString $Upassword -AsPlainText -Force) `
+                       -City $Uoffice `
+                       -Path $office `
+                       -Department $dept `
+                       -Enabled $true
+                       
+            Write-Output "Utilisateur ajouté dans $office : $name"
+        } catch {
+            Write-Output "Erreur lors de l'ajout de $name : $_"
+        }
+    }
+}
+
+
+#***********************************************Création des Groupes************************************************
+
+
+New-ADGroup -Name Formule1 -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Football -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Natation -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Basketball -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Tennis -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Rugby -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+
+
+
+#***********************************************Groupes sous Val D'Oise************************************************
+
+New-ADGroup -Name Formule1-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Football-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Natation-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Basketball-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Tennis-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Rugby-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+
+
+
+#***********************************************Groupes sous Seine-Saint-Denis************************************************
+
+New-ADGroup -Name Formule1-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Football-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Natation-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Basketball-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Tennis-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Rugby-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+
+
+
+#***********************************************Groupes sous Essone************************************************
+
+New-ADGroup -Name Formule1-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Football-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Natation-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Basketball-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Tennis-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Rugby-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+
+
+
+
+
+
+
+#***********************************************Ajout des utilisateurs du Val D'Oise dans leurs groupes***********************************************
+
+Import-Module ActiveDirectory
+Import-Module 'Microsoft.PowerShell.Security'
+
+
+$users = Import-Csv -Delimiter ";" -Path "C:\docs\Script\importSports.csv"
+
+foreach ($user in $users) {
+    $name = "$($user.firstName) $($user.lastName)"
+    $login = "$($user.firstName).$($user.lastName)"
+    $Uoffice = $user.office
+    $Upassword = $user.password
+    $dept = $user.department
+
+
+
+if ($Uoffice -eq "Val D'Oise" -and $dept -eq "Formule1"){
+
+    Add-ADGroupMember -Identity 'Formule1-95' -Members $login
+
+}
+elseif ($Uoffice -eq "Val D'Oise" -and $dept -eq "Football"){
+
+    Add-ADGroupMember -Identity 'Football-95' -Members $login
+
+}
+elseif ($Uoffice -eq "Val D'Oise" -and $dept -eq "Natation"){
+
+    Add-ADGroupMember -Identity 'Natation-95' -Members $login
+
+}
+elseif ($Uoffice -eq "Val D'Oise" -and $dept -eq "Basketball"){
+
+    Add-ADGroupMember -Identity 'Basketball-95' -Members $login
+
+}
+elseif ($Uoffice -eq "Val D'Oise" -and $dept -eq "Tennis"){
+
+    Add-ADGroupMember -Identity 'Tennis-95' -Members $login
+
+}
+elseif ($Uoffice -eq "Val D'Oise" -and $dept -eq "Rugby"){
+
+    Add-ADGroupMember -Identity 'Rugby-95' -Members $login
+} 
+
+#***********************************************Ajout des utilisateurs de Seine-Saint-Denis dans leurs groupes***********************************************
+
+if ($Uoffice -eq "Seine-Saint-Denis" -and $dept -eq "Formule1"){
+
+    Add-ADGroupMember -Identity 'Formule1-93' -Members $login
+
+}
+elseif ($Uoffice -eq "Seine-Saint-Denis" -and $dept -eq "Football"){
+
+    Add-ADGroupMember -Identity 'Football-93' -Members $login
+
+}
+elseif ($Uoffice -eq "Seine-Saint-Denis" -and $dept -eq "Natation"){
+
+    Add-ADGroupMember -Identity 'Natation-93' -Members $login
+
+}
+elseif ($Uoffice -eq "Seine-Saint-Denis" -and $dept -eq "Basketball"){
+
+    Add-ADGroupMember -Identity 'Basketball-93' -Members $login
+
+}
+elseif ($Uoffice -eq "Seine-Saint-Denis" -and $dept -eq "Tennis"){
+
+    Add-ADGroupMember -Identity 'Tennis-93' -Members $login
+
+}
+elseif ($Uoffice -eq "Seine-Saint-Denis" -and $dept -eq "Rugby"){
+
+    Add-ADGroupMember -Identity 'Rugby-93' -Members $login
+}
+
+#***********************************************Ajout des utilisateurs du Essone dans leurs groupes***********************************************
+
+if ($Uoffice -eq "Essone" -and $dept -eq "Formule1"){
+
+    Add-ADGroupMember -Identity 'Formule1-91' -Members $login
+
+}
+elseif ($Uoffice -eq "Essone" -and $dept -eq "Football"){
+
+    Add-ADGroupMember -Identity 'Football-91' -Members $login
+
+}
+elseif ($Uoffice -eq "Essone" -and $dept -eq "Natation"){
+
+    Add-ADGroupMember -Identity 'Natation-91' -Members $login
+
+}
+elseif ($Uoffice -eq "Essone" -and $dept -eq "Basketball"){
+
+    Add-ADGroupMember -Identity 'Basketball-91' -Members $login
+
+}
+elseif ($Uoffice -eq "Essone" -and $dept -eq "Tennis"){
+
+    Add-ADGroupMember -Identity 'Tennis-91' -Members $login
+
+}
+elseif ($Uoffice -eq "Essone" -and $dept -eq "Rugby"){
+
+    Add-ADGroupMember -Identity 'Rugby-91' -Members $login
+} 
+}
+
+#***********************************************Ajout des groupes dans les groupes***********************************************
+
+Add-ADGroupMember -Identity 'Formule1' -Members Formule1-95,Formule1-93,Formule1-91
+Add-ADGroupMember -Identity 'Football' -Members Football-95,Football-93,Football-91
+Add-ADGroupMember -Identity 'Natation'-Members Natation-95,Natation-93,Natation-91
+Add-ADGroupMember -Identity 'Basketball' -Members Basketball-95,Basketball-93,Basketball-91
+Add-ADGroupMember -Identity 'Tennis'-Members Tennis-95,Tennis-93,Tennis-91
+Add-ADGroupMember -Identity 'Rugby' -Members Rugby-95,Rugby-93,Rugby-91
