@@ -360,11 +360,11 @@ if (-not (Test-Path $csvPath)) {
 
 #***********************************************Création des OU***********************************************#
                                                                                        
-New-ADOrganizationalUnit -Name "Sports" -Path "ou=0_m2l.lan,dc=elowan,dc=fr"                           
+New-ADOrganizationalUnit -Name "Sports" -Path "ou=0_m2l.lan,dc=m2l,dc=lan"                           
                                                                                         
-New-ADOrganizationalUnit -Name "Val D'Oise" -Path "ou=Sports,ou=0_m2l.lan,dc=elowan,dc=fr"             
-New-ADOrganizationalUnit -Name "Seine-Saint-Denis" -Path "ou=Sports,ou=0_m2l.lan,dc=elowan,dc=fr"      
-New-ADOrganizationalUnit -Name "Essone" -Path "ou=Sports,ou=0_m2l.lan,dc=elowan,dc=fr"                 
+New-ADOrganizationalUnit -Name "Val D'Oise" -Path "ou=Sports,ou=0_m2l.lan,dc=m2l,dc=lan"             
+New-ADOrganizationalUnit -Name "Seine-Saint-Denis" -Path "ou=Sports,ou=0_m2l.lan,dc=m2l,dc=lan"      
+New-ADOrganizationalUnit -Name "Essone" -Path "ou=Sports,ou=0_m2l.lan,dc=m2l,dc=lan"                 
                                                                                         
 
 
@@ -378,9 +378,9 @@ foreach ($user in $users) {
 
     # Déterminer l'OU en fonction du bureau
     switch ($Uoffice) {
-        "Val D'Oise" { $office = "OU=Val D'Oise,OU=Sports,OU=0_m2l.lan,DC=elowan,DC=fr" }
-        "Seine-Saint-Denis" { $office = "OU=Seine-Saint-Denis,OU=Sports,OU=0_m2l.lan,DC=elowan,DC=fr" }
-        "Essone" { $office = "OU=Essone,OU=Sports,OU=0_m2l.lan,DC=elowan,DC=fr" }
+        "Val D'Oise" { $office = "OU=Val D'Oise,OU=Sports,OU=0_m2l.lan,DC=m2l,DC=lan" }
+        "Seine-Saint-Denis" { $office = "OU=Seine-Saint-Denis,OU=Sports,OU=0_m2l.lan,DC=m2l,DC=lan" }
+        "Essone" { $office = "OU=Essone,OU=Sports,OU=0_m2l.lan,DC=m2l,DC=lan" }
         default { 
             Write-Output "Bureau non reconnu pour l'utilisateur $name"
             continue
@@ -416,45 +416,45 @@ foreach ($user in $users) {
 #***********************************************Création des Groupes************************************************
 
 
-New-ADGroup -Name Formule1 -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Football -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Natation -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Basketball -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Tennis -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Rugby -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Formule1 -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Football -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Natation -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Basketball -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Tennis -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Rugby -GroupScope Global -GroupCategory Security -Path "ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
 
 
 
 #***********************************************Groupes sous Val D'Oise************************************************
 
-New-ADGroup -Name Formule1-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Football-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Natation-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Basketball-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Tennis-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Rugby-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Formule1-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Football-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Natation-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Basketball-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Tennis-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Rugby-95 -GroupScope Global -GroupCategory Security -Path "ou=Val D'Oise,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
 
 
 
 #***********************************************Groupes sous Seine-Saint-Denis************************************************
 
-New-ADGroup -Name Formule1-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Football-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Natation-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Basketball-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Tennis-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Rugby-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Formule1-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Football-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Natation-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Basketball-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Tennis-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Rugby-93 -GroupScope Global -GroupCategory Security -Path "ou=Seine-Saint-Denis,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
 
 
 
 #***********************************************Groupes sous Essone************************************************
 
-New-ADGroup -Name Formule1-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Football-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Natation-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Basketball-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Tennis-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
-New-ADGroup -Name Rugby-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=elowan,DC=fr"
+New-ADGroup -Name Formule1-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Football-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Natation-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Basketball-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Tennis-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
+New-ADGroup -Name Rugby-91 -GroupScope Global -GroupCategory Security -Path "ou=Essone,ou=Sports,ou=0_m2l.lan,DC=m2l,DC=lan"
 
 
 
